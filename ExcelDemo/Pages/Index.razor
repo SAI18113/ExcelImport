@@ -1,0 +1,88 @@
+﻿@page "/"
+@using ExcelDemo.Models;
+@using System.Text.RegularExpressions;
+@inject IWebHostEnvironment _environment
+
+
+<InputFile OnChange="HandleExcel" accept=".csv" multiple="false"></InputFile>
+
+
+@code{
+
+    //private async Task HandleExcel(InputFileChangeEventArgs e)
+    //{
+    //    try
+    //    {
+    //        //List<string> lines = System.IO.File.ReadAllLines(e.File.ToString()).ToList();
+    //        var file = e.ToString();
+    //        Stream stream = e.File.OpenReadStream();
+    //        var path = Path.Combine(_environment.ContentRootPath, e.File.Name);
+    //        var importer = new Importer();
+    //        importer.Mappings = new List<KeyValuePair<string, string>>
+    //        {
+    //            new KeyValuePair<string, string>("ORIGIN","ORIGIN"),
+    //            new KeyValuePair<string, string>("DEST CITY","DestinationCity"),
+    //            new KeyValuePair<String, String>("CURRENT RATE","CURRENTRATE"),
+    //            new KeyValuePair<string, string>("GEOCODE","GEOCODE"),
+
+
+
+    //        };
+
+
+
+    //        //var list = importer.Import<ExportRates>(@"D:\Users\tirumalanadis\Downloads\ExportPricing.csv");
+    //        var list = importer.Import<ExportRates>(file);
+    //        //var list = importer.Import<ExportRates>(path);
+    //        var list1 = list;
+    //    }
+    //    catch (Exception)
+    //    {
+    //        throw;
+    //    }
+
+    //}
+
+
+    private async Task HandleExcel(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var file = e.File;
+            var stream = file.OpenReadStream();
+            var csv = new List<string[]>();
+            MemoryStream ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            stream.Close();
+            var outputFileString = System.Text.Encoding.UTF8.GetString(ms.ToArray());
+            foreach (var item in outputFileString.Split(Environment.NewLine))  
+            {  
+                csv.Add(SplitCSV(item.ToString()));  
+            }
+            var list = csv;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+
+    private string[] SplitCSV(string input)
+    {
+        Regex csvSplit = new Regex("(?:^|,)(\"(?:[^\"]+|\"\")*\"|[^,]*)", RegexOptions.Compiled);
+        List<string> list = new List<string>();  
+        string curr = null; 
+        foreach (Match match in csvSplit.Matches(input))  
+        {  
+            curr = match.Value;  
+            if (0 == curr.Length)  list.Add(""); 
+  
+            list.Add(curr.TrimStart(','));  
+        }  
+  
+            return list.ToArray(); 
+
+    }
+
+}
+
